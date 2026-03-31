@@ -14,7 +14,7 @@ pnpm-debug.log*
 # Env files
 .env
 .env.*
-
+.env.example
 # Vite
 .vite
 
