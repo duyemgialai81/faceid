@@ -1,0 +1,4 @@
+# ignore chung
+.vscode/
+.DS_Store
+Thumbs.db
