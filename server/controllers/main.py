@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from bdconnect.database import get_db_connection
+from database.database import get_db_connection
 from service.face_service import face_ai_service, face_memory_store, UPLOAD_DIR
 
 logging.basicConfig(level=logging.INFO)

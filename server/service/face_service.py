@@ -1,21 +1,3 @@
-"""
-face_service.py — OpenCV YuNet + SFace (Windows-compatible, no compilation)
-─────────────────────────────────────────────────────────────────────────────
-Cài đặt (chỉ cần 2 lệnh):
-  pip install opencv-python onnxruntime
-
-Tại sao chọn YuNet + SFace?
-  ✅ Tích hợp sẵn trong OpenCV — không cần compile C++ gì cả
-  ✅ Chạy được ngay trên Windows/Mac/Linux
-  ✅ Tốc độ: detection ~10ms, recognition ~15ms → tổng ~25-40ms
-  ✅ Auto tải 2 file model nhỏ (~3MB + ~38MB) khi lần đầu chạy
-
-Benchmark CPU:
-  face_recognition (dlib HOG):  ~600–1000ms  ← đang dùng
-  InsightFace buffalo_sc:       ~35–60ms     ← cần compile trên Windows
-  OpenCV YuNet + SFace:         ~25–50ms     ← giải pháp này ✅
-"""
-
 import cv2
 import numpy as np
 import io
@@ -26,27 +8,16 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Optional
 from PIL import Image
-
 logger = logging.getLogger(__name__)
-
-# ─── Đường dẫn model ──────────────────────────────────────────────────────────
 MODEL_DIR   = "models"
 UPLOAD_DIR  = "uploads"
 YUNET_PATH  = os.path.join(MODEL_DIR, "face_detection_yunet_2023mar.onnx")
 SFACE_PATH  = os.path.join(MODEL_DIR, "face_recognition_sface_2021dec.onnx")
-
-# URL tải model từ OpenCV Zoo (chính thức, nhỏ gọn)
 YUNET_URL = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
 SFACE_URL  = "https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx"
-
-# Ngưỡng nhận diện: cosine similarity
-# > 0.40: khá chắc | > 0.363: ngưỡng chính thức SFace paper
 COSINE_THRESHOLD = 0.40
-
 os.makedirs(MODEL_DIR,  exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-
 def _download_model(url: str, path: str, name: str) -> None:
     """Tải model nếu chưa có, hiển thị tiến trình."""
     if os.path.exists(path):
@@ -59,7 +30,7 @@ def _download_model(url: str, path: str, name: str) -> None:
 
     urllib.request.urlretrieve(url, path, _progress)
     print()
-    logger.info(f"[Model] ✅ {name} đã tải xong → {path}")
+    logger.info(f" {name} đã tải xong → {path}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -109,14 +80,14 @@ class FaceMemoryStore:
                 except Exception as e:
                     logger.warning(f"[RAM] Bỏ qua {row.get('name')}: {e}")
             self._loaded = True
-        logger.info(f"[RAM] ✅ Nạp {len(self._faces)} khuôn mặt")
+        logger.info(f" {len(self._faces)} khuôn mặt")
 
     # ── CRUD real-time ────────────────────────────────────────────────────
     def add(self, person_id: str, name: str, role: str, img_path: str, encoding: list[float]) -> None:
         enc = self._normalize(np.array(encoding, dtype=np.float32))
         with self._lock:
             self._faces.append(CachedFace(person_id, name, role, img_path, enc))
-        logger.info(f"[RAM] ➕ {name} | Tổng: {self.count}")
+        logger.info(f" {name} | Tổng: {self.count}")
 
     def remove_by_person(self, person_id: str) -> int:
         with self._lock:
@@ -197,7 +168,7 @@ class FaceAiService:
             SFACE_PATH, ""
         )
 
-        logger.info("[AI] ✅ YuNet + SFace sẵn sàng")
+        logger.info("[AI]  YuNet + SFace sẵn sàng")
 
     # ── Decode ảnh bytes → BGR numpy ──────────────────────────────────────
     @staticmethod
